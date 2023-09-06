@@ -4,6 +4,7 @@ import os
 import cv2
 import fitz
 import uuid
+import shutil
 import base64
 import requests
 import datetime
@@ -121,5 +122,12 @@ def table_ocr(table_req: TableRequest):
             table.append({"box": box, "text": ocr_res})
 
         res.append(table)
+
+    try:
+        shutil.rmtree(file_path, ignore_errors=True)
+        for img_path in image_path_list:
+            shutil.rmtree(img_path, ignore_errors=True)
+    except:
+        pass
 
     return JSONResponse(BaseResponse(errcode=RET.OK, errmsg=error_map[RET.OK], data={'results': res}).dict())
