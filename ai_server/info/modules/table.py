@@ -60,7 +60,7 @@ router = APIRouter()
 @router.api_route('/ai/ocr/table', methods=['POST'], response_model=BaseResponse, summary="Table OCR")
 def table_ocr(table_req: TableRequest):
     nowtime = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-    if table_req.file_type == 1:
+    if table_req.file_type == "PDF":
         file_path = os.path.join(TEMP, nowtime + uuid.uuid1().hex + '.pdf')
     else:
         file_path = os.path.join(TEMP, nowtime + uuid.uuid1().hex + '.jpg')
@@ -74,7 +74,7 @@ def table_ocr(table_req: TableRequest):
         return JSONResponse(BaseResponse(errcode=RET.FILEGETERR, errmsg=error_map[RET.FILEGETERR]).dict())
 
     image_path_list = []
-    if table_req.file_type == 1:
+    if table_req.file_type == "PDF":
         try:
             doc = fitz.open(file_path)
             pdf_pages = doc.page_count
