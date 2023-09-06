@@ -16,7 +16,7 @@ def get_ocr_byte_res(img):
     try:
         res = requests.post(url=OCR_BYTE_URL,
                             files=data)
-        logger.info(res.json())
+        # logger.info(res.json())
         txt = res.json()['data']['results']
     except Exception as e:
         logger.error({'EXCEPTION': e})
