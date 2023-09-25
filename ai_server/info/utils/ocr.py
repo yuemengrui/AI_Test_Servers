@@ -33,10 +33,12 @@ def get_ocr_general_res(img):
     try:
         res = requests.post(url=OCR_GENERAL_URL,
                             json=data)
-        return res.json()['data']['results']
-        # txt_list = res.json()['data']['results']
-        # txt_list = [x['text'][0] for x in txt_list]
-        # txt = '\n'.join(txt_list)
+
+        txt_list = res.json()['data']['results']
+        txt_list = [x['text'][0] for x in txt_list]
+        txt = ''.join(txt_list)
+        return txt
     except Exception as e:
-        print({'EXCEPTION': e})
-        raise 'error'
+        logger.error({'EXCEPTION': e})
+        return ''
+

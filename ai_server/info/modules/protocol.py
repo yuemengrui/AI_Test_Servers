@@ -15,3 +15,7 @@ class TableRequest(BaseModel):
     file_url: AnyUrl = Field(description="文件URL")
     file_type: Literal["PDF", "IMAGE"] = Field(description="文件类型")
     table_seg_configs: Dict = Field(default=dict(), description="表格分割超参数")
+
+
+class PDFRequest(BaseModel):
+    file_url: AnyUrl = Field(description="PDF URL")
