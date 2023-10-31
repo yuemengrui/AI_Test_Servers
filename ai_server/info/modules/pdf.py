@@ -18,109 +18,210 @@ from info.utils.ocr import get_ocr_general_res
 router = APIRouter()
 
 
-@router.api_route('/ai/ocr/pdf', methods=['POST'], response_model=BaseResponse, summary="PDF OCR")
+# @router.api_route('/ai/ocr/pdf', methods=['POST'], response_model=BaseResponse, summary="PDF OCR")
+# def pdf_ocr(pdf_req: PDFRequest):
+#     nowtime = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+#
+#     file_path = os.path.join(TEMP, nowtime + uuid.uuid1().hex + '.pdf')
+#
+#     try:
+#         file_data = requests.get(pdf_req.file_url).content
+#         with open(file_path, 'wb') as f:
+#             f.write(file_data)
+#     except Exception as e:
+#         logger.error({'EXCEPTION': e})
+#         return JSONResponse(BaseResponse(errcode=RET.FILEGETERR, errmsg=error_map[RET.FILEGETERR]).dict())
+#
+#     image_path_list = []
+#     try:
+#         doc = fitz.open(file_path)
+#         pdf_pages = doc.page_count
+#     except Exception as e:
+#         logger.error({'EXCEPTION': e})
+#         return JSONResponse(
+#             BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': PDF转图片失败').dict())
+#     else:
+#         for i in range(pdf_pages):
+#             img_path = os.path.join(TEMP, str(nowtime) + uuid.uuid1().hex + '.jpg')
+#             try:
+#                 page = doc[i]
+#                 zoom_x = 2.0
+#                 zoom_y = 2.0
+#                 trans = fitz.Matrix(zoom_x, zoom_y)
+#                 pm = page.get_pixmap(matrix=trans)
+#                 pm.save(img_path)
+#             except Exception as e:
+#                 logger.error({'EXCEPTION': e})
+#                 return JSONResponse(
+#                     BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': PDF转图片失败').dict())
+#             else:
+#                 image_path_list.append(img_path)
+#
+#     if len(image_path_list) == 0:
+#         logger.error({'DATA ERROR': 'image_path_list为空'})
+#         return JSONResponse(BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR]).dict())
+#
+#     res = []
+#
+#     for j, im_path in enumerate(image_path_list):
+#         origin_img = cv2.imread(im_path)
+#
+#         if origin_img is None:
+#             return JSONResponse(BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': 图片为空').dict())
+#
+#         ocr_res = get_ocr_general_res(origin_img)
+#         res.append({'page': j, 'content': ocr_res})
+#
+#     try:
+#         shutil.rmtree(file_path, ignore_errors=True)
+#         for img_path in image_path_list:
+#             shutil.rmtree(img_path, ignore_errors=True)
+#     except:
+#         pass
+#
+#     return JSONResponse(BaseResponse(errcode=RET.OK, errmsg=error_map[RET.OK], data={'results': res}).dict())
+#
+#
+# @router.api_route('/ai/ocr/general', methods=['POST'], response_model=BaseResponse, summary="IMG OCR")
+# def general_ocr(img_req: PDFRequest):
+#     logger.info({'request:':str(img_req)})
+#     nowtime = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+#
+#     file_path = os.path.join(TEMP, nowtime + uuid.uuid1().hex + '.jpg')
+#
+#     try:
+#         file_data = requests.get(img_req.file_url).content
+#         with open(file_path, 'wb') as f:
+#             f.write(file_data)
+#     except Exception as e:
+#         logger.error({'EXCEPTION': e})
+#         return JSONResponse(BaseResponse(errcode=RET.FILEGETERR, errmsg=error_map[RET.FILEGETERR]).dict())
+#
+#     image_path_list = []
+#     image_path_list.append(file_path)
+#
+#
+#     if len(image_path_list) == 0:
+#         logger.error({'DATA ERROR': 'image_path_list为空'})
+#         return JSONResponse(BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR]).dict())
+#
+#     res = []
+#
+#     for j, im_path in enumerate(image_path_list):
+#         origin_img = cv2.imread(im_path)
+#
+#         if origin_img is None:
+#             return JSONResponse(BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': 图片为空').dict())
+#
+#         ocr_res = get_ocr_general_res(origin_img)
+#         res.append({'page': j, 'content': ocr_res})
+#
+#     try:
+#         shutil.rmtree(file_path, ignore_errors=True)
+#         for img_path in image_path_list:
+#             shutil.rmtree(img_path, ignore_errors=True)
+#     except:
+#         pass
+#
+#     return JSONResponse(BaseResponse(errcode=RET.OK, errmsg=error_map[RET.OK], data={'results': res}).dict())
+
+@router.api_route('/ai/ocr/content', methods=['POST'], response_model=BaseResponse, summary="PDF OR IMAGE OCR")
 def pdf_ocr(pdf_req: PDFRequest):
     nowtime = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+    if pdf_req.file_type == "PDF":
+        file_path = os.path.join(TEMP, nowtime + uuid.uuid1().hex + '.pdf')
+        try:
+            file_data = requests.get(pdf_req.file_url).content
+            with open(file_path, 'wb') as f:
+                f.write(file_data)
+        except Exception as e:
+            logger.error({'EXCEPTION': e})
+            return JSONResponse(BaseResponse(errcode=RET.FILEGETERR, errmsg=error_map[RET.FILEGETERR]).dict())
 
-    file_path = os.path.join(TEMP, nowtime + uuid.uuid1().hex + '.pdf')
+        image_path_list = []
+        try:
+            doc = fitz.open(file_path)
+            pdf_pages = doc.page_count
+        except Exception as e:
+            logger.error({'EXCEPTION': e})
+            return JSONResponse(
+                BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': PDF转图片失败').dict())
+        else:
+            for i in range(pdf_pages):
+                img_path = os.path.join(TEMP, str(nowtime) + uuid.uuid1().hex + '.jpg')
+                try:
+                    page = doc[i]
+                    zoom_x = 2.0
+                    zoom_y = 2.0
+                    trans = fitz.Matrix(zoom_x, zoom_y)
+                    pm = page.get_pixmap(matrix=trans)
+                    pm.save(img_path)
+                except Exception as e:
+                    logger.error({'EXCEPTION': e})
+                    return JSONResponse(
+                        BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': PDF转图片失败').dict())
+                else:
+                    image_path_list.append(img_path)
 
-    try:
-        file_data = requests.get(pdf_req.file_url).content
-        with open(file_path, 'wb') as f:
-            f.write(file_data)
-    except Exception as e:
-        logger.error({'EXCEPTION': e})
-        return JSONResponse(BaseResponse(errcode=RET.FILEGETERR, errmsg=error_map[RET.FILEGETERR]).dict())
+        if len(image_path_list) == 0:
+            logger.error({'DATA ERROR': 'image_path_list为空'})
+            return JSONResponse(BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR]).dict())
 
-    image_path_list = []
-    try:
-        doc = fitz.open(file_path)
-        pdf_pages = doc.page_count
-    except Exception as e:
-        logger.error({'EXCEPTION': e})
-        return JSONResponse(
-            BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': PDF转图片失败').dict())
-    else:
-        for i in range(pdf_pages):
-            img_path = os.path.join(TEMP, str(nowtime) + uuid.uuid1().hex + '.jpg')
-            try:
-                page = doc[i]
-                zoom_x = 2.0
-                zoom_y = 2.0
-                trans = fitz.Matrix(zoom_x, zoom_y)
-                pm = page.get_pixmap(matrix=trans)
-                pm.save(img_path)
-            except Exception as e:
-                logger.error({'EXCEPTION': e})
+        res = []
+
+        for j, im_path in enumerate(image_path_list):
+            origin_img = cv2.imread(im_path)
+
+            if origin_img is None:
                 return JSONResponse(
-                    BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': PDF转图片失败').dict())
-            else:
-                image_path_list.append(img_path)
+                    BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': 图片为空').dict())
 
-    if len(image_path_list) == 0:
-        logger.error({'DATA ERROR': 'image_path_list为空'})
-        return JSONResponse(BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR]).dict())
+            ocr_res = get_ocr_general_res(origin_img)
+            res.append({'page': j, 'content': ocr_res})
 
-    res = []
+        try:
+            shutil.rmtree(file_path, ignore_errors=True)
+            for img_path in image_path_list:
+                shutil.rmtree(img_path, ignore_errors=True)
+        except:
+            pass
 
-    for j, im_path in enumerate(image_path_list):
-        origin_img = cv2.imread(im_path)
+        return JSONResponse(BaseResponse(errcode=RET.OK, errmsg=error_map[RET.OK], data={'results': res}).dict())
+    else:
+        file_path = os.path.join(TEMP, nowtime + uuid.uuid1().hex + '.jpg')
+        try:
+            file_data = requests.get(pdf_req.file_url).content
+            with open(file_path, 'wb') as f:
+                f.write(file_data)
+        except Exception as e:
+            logger.error({'EXCEPTION': e})
+            return JSONResponse(BaseResponse(errcode=RET.FILEGETERR, errmsg=error_map[RET.FILEGETERR]).dict())
 
-        if origin_img is None:
-            return JSONResponse(BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': 图片为空').dict())
+        image_path_list = []
+        image_path_list.append(file_path)
 
-        ocr_res = get_ocr_general_res(origin_img)
-        res.append({'page': j, 'content': ocr_res})
+        if len(image_path_list) == 0:
+            logger.error({'DATA ERROR': 'image_path_list为空'})
+            return JSONResponse(BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR]).dict())
 
-    try:
-        shutil.rmtree(file_path, ignore_errors=True)
-        for img_path in image_path_list:
-            shutil.rmtree(img_path, ignore_errors=True)
-    except:
-        pass
+        res = []
 
-    return JSONResponse(BaseResponse(errcode=RET.OK, errmsg=error_map[RET.OK], data={'results': res}).dict())
+        for j, im_path in enumerate(image_path_list):
+            origin_img = cv2.imread(im_path)
 
+            if origin_img is None:
+                return JSONResponse(
+                    BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': 图片为空').dict())
 
-@router.api_route('/ai/ocr/general', methods=['POST'], response_model=BaseResponse, summary="IMG OCR")
-def general_ocr(img_req: PDFRequest):
-    logger.info({'request:':str(img_req)})
-    nowtime = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+            ocr_res = get_ocr_general_res(origin_img)
+            res.append({'page': j, 'content': ocr_res})
 
-    file_path = os.path.join(TEMP, nowtime + uuid.uuid1().hex + '.jpg')
+        try:
+            shutil.rmtree(file_path, ignore_errors=True)
+            for img_path in image_path_list:
+                shutil.rmtree(img_path, ignore_errors=True)
+        except:
+            pass
 
-    try:
-        file_data = requests.get(img_req.file_url).content
-        with open(file_path, 'wb') as f:
-            f.write(file_data)
-    except Exception as e:
-        logger.error({'EXCEPTION': e})
-        return JSONResponse(BaseResponse(errcode=RET.FILEGETERR, errmsg=error_map[RET.FILEGETERR]).dict())
+        return JSONResponse(BaseResponse(errcode=RET.OK, errmsg=error_map[RET.OK], data={'results': res}).dict())
 
-    image_path_list = []
-    image_path_list.append(file_path)
-
-
-    if len(image_path_list) == 0:
-        logger.error({'DATA ERROR': 'image_path_list为空'})
-        return JSONResponse(BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR]).dict())
-
-    res = []
-
-    for j, im_path in enumerate(image_path_list):
-        origin_img = cv2.imread(im_path)
-
-        if origin_img is None:
-            return JSONResponse(BaseResponse(errcode=RET.DATAERR, errmsg=error_map[RET.DATAERR] + ': 图片为空').dict())
-
-        ocr_res = get_ocr_general_res(origin_img)
-        res.append({'page': j, 'content': ocr_res})
-
-    try:
-        shutil.rmtree(file_path, ignore_errors=True)
-        for img_path in image_path_list:
-            shutil.rmtree(img_path, ignore_errors=True)
-    except:
-        pass
-
-    return JSONResponse(BaseResponse(errcode=RET.OK, errmsg=error_map[RET.OK], data={'results': res}).dict())

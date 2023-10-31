@@ -18,4 +18,5 @@ class TableRequest(BaseModel):
 
 
 class PDFRequest(BaseModel):
-    file_url: AnyUrl = Field(description="PDF URL")
+    file_url: AnyUrl = Field(description="FILE URL")
+    file_type: Literal["PDF", "IMAGE"] = Field(description="文件类型")
